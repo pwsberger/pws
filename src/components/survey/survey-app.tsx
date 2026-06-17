@@ -79,6 +79,7 @@ export function SurveyApp() {
   const [adReadyAt, setAdReadyAt] = useState<number | null>(null);
   const [adSecondsLeft, setAdSecondsLeft] = useState(5);
   const [error, setError] = useState<string | null>(null);
+  const [pendingQuestionIds, setPendingQuestionIds] = useState<Record<string, boolean>>({});
   const [isPending, startTransition] = useTransition();
   const pageEnteredAt = useRef(Date.now());
   const adShownAt = useRef<number | null>(null);
@@ -198,32 +199,40 @@ export function SurveyApp() {
 
   const saveAndContinue = () => {
     if (!session || !currentQuestion) return;
+    if (pendingQuestionIds[currentQuestion.id]) return;
     const answer = currentAnswer.trim();
     if (!answer) return;
+    const savedQuestion = currentQuestion;
+    const savedQuestionIndex = questionIndex;
+    const answeredAt = Date.now();
+    const changeCount = Math.max(0, (changeCounts[savedQuestion.id] ?? 1) - 1);
     setError(null);
+
+    setPendingQuestionIds((current) => ({ ...current, [savedQuestion.id]: true }));
+    if (savedQuestionIndex < surveyQuestions.length - 1) {
+      setQuestionIndex((index) => index + 1);
+      setQuestionEnteredAt(answeredAt);
+    }
+
     startTransition(async () => {
       try {
-        const changeCount = Math.max(0, (changeCounts[currentQuestion.id] ?? 1) - 1);
         await saveResponse({
           participantId: session.participantId,
-          questionId: currentQuestion.id,
+          questionId: savedQuestion.id,
           answer,
-          timeToAnswerMs: Date.now() - questionEnteredAt,
+          timeToAnswerMs: answeredAt - questionEnteredAt,
           changeCount,
         });
 
         if (changeCount > 0) {
           void logEvent(session.participantId, "answer_changed", {
-            question_id: currentQuestion.id,
+            question_id: savedQuestion.id,
             change_count: changeCount,
             final_answer_length: answer.length,
           }).catch(() => undefined);
         }
 
-        if (questionIndex < surveyQuestions.length - 1) {
-          setQuestionIndex((index) => index + 1);
-          setQuestionEnteredAt(Date.now());
-        } else {
+        if (savedQuestionIndex === surveyQuestions.length - 1) {
           const total = Date.now() - session.startedAt;
           await completeSurvey(session.participantId, total);
           const completedSession = { ...session, completed: true };
@@ -233,6 +242,16 @@ export function SurveyApp() {
         }
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "Opslaan is mislukt.");
+        if (savedQuestionIndex < surveyQuestions.length - 1) {
+          setQuestionIndex(savedQuestionIndex);
+          setQuestionEnteredAt(questionEnteredAt);
+        }
+      } finally {
+        setPendingQuestionIds((current) => {
+          const next = { ...current };
+          delete next[savedQuestion.id];
+          return next;
+        });
       }
     });
   };

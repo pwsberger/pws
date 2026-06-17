@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 48 30% 98%;
+    --foreground: 220 16% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 16% 12%;
+    --primary: 174 72% 32%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 39 96% 58%;
+    --secondary-foreground: 220 16% 12%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 218 12% 42%;
+    --accent: 345 78% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 78% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 18% 88%;
+    --input: 214 18% 88%;
+    --ring: 174 72% 32%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  .animate-confetti {
+    animation: confetti-fall 1200ms ease-out both;
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) rotate(0deg) scale(0.8);
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(88px) rotate(180deg) scale(1);
+  }
+}

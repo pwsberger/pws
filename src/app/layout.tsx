@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PWS Sportmarketing Experiment",
-  description: "A/B-onderzoek naar sportmarketing en koopgedrag.",
+  title: "PWS Onderzoek",
+  description: "Kort onderzoek voor een profielwerkstuk.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

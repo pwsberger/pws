@@ -275,9 +275,9 @@ export function SurveyApp() {
             {step === "welcome" && (
               <Card>
                 <CardHeader>
-                  <CardTitle>PWS sportmarketing en koopgedrag</CardTitle>
+                  <CardTitle>PWS onderzoek</CardTitle>
                   <CardDescription>
-                    Je krijgt straks een korte advertentie te zien en beantwoordt daarna enkele vragen.
+                    Je krijgt straks kort materiaal te zien en beantwoordt daarna enkele vragen.
                     Je antwoorden worden anoniem verwerkt voor een profielwerkstuk.
                   </CardDescription>
                 </CardHeader>
@@ -336,7 +336,7 @@ export function SurveyApp() {
                     />
                   )}
                   <SliderField
-                    label="Hoe vaak kijk je sport?"
+                    label="Hoe vaak kijk je gemiddeld sport in een normale week?"
                     value={demographics.sports_interest}
                     onChange={(value) => setDemographics({ ...demographics, sports_interest: value })}
                   />
@@ -351,7 +351,13 @@ export function SurveyApp() {
 
             {step === "ad" && session && (
               <div className="space-y-4">
-                <h1 className="text-center text-2xl font-semibold tracking-normal">Bekijk deze advertentie</h1>
+                <div className="space-y-2 text-center">
+                  <h1 className="text-2xl font-semibold tracking-normal">Bekijk deze advertentie</h1>
+                  <p className="text-sm text-muted-foreground">
+                    Kijk goed naar de poster alsof je hem online of op school tegenkomt. Daarna krijg je vragen over je
+                    eerste indruk.
+                  </p>
+                </div>
                 <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
                   <Image
                     priority

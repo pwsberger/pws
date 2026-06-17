@@ -357,8 +357,8 @@ export function SurveyApp() {
                     priority
                     src={session.assignedVariant === "A" ? "/ads/variant-a.png" : "/ads/variant-b.png"}
                     alt="Advertentie voor Voltix Energy"
-                    width={756}
-                    height={1220}
+                    width={680}
+                    height={1014}
                     className="h-[min(72vh,760px)] w-full bg-black object-contain"
                   />
                 </div>

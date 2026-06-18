@@ -29,12 +29,11 @@ const storageKey = "pws-sportmarketing-session-v1";
 const answerStorageKey = "pws-sportmarketing-answers-v1";
 const progressStorageKey = "pws-sportmarketing-progress-v1";
 const totalSteps = 3 + surveyQuestions.length;
-const educationOptions = ["vwo", "havo", "vmbo/tl", "anders"];
+const educationOptions = ["vwo", "havo", "vmbo/tl", "anders / niet meer op school"];
 const classOptionsByEducation: Record<string, string[]> = {
   "vmbo/tl": ["1", "2", "3", "4"],
   havo: ["1", "2", "3", "4", "5"],
   vwo: ["1", "2", "3", "4", "5", "6"],
-  anders: ["1", "2", "3", "4", "5", "6"],
 };
 
 const initialDemographics: Demographics = {
@@ -71,6 +70,7 @@ function getDeviceInfo(): DeviceInfo {
 export function SurveyApp() {
   const [step, setStep] = useState<Step>("welcome");
   const [demographics, setDemographics] = useState<Demographics>(initialDemographics);
+  const [educationOther, setEducationOther] = useState("");
   const [session, setSession] = useState<SessionState | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -158,7 +158,13 @@ export function SurveyApp() {
 
   const beginSurvey = () => setStep("demographics");
 
-  const canSubmitDemographics = Object.values(demographics).every((value) => value.trim().length > 0);
+  const isOtherEducation = demographics.education_level === "anders / niet meer op school";
+  const canSubmitDemographics =
+    demographics.age.trim().length > 0 &&
+    demographics.gender.trim().length > 0 &&
+    demographics.education_level.trim().length > 0 &&
+    demographics.sports_interest.trim().length > 0 &&
+    (isOtherEducation ? educationOther.trim().length > 0 : demographics.class_name.trim().length > 0);
   const availableClassOptions = classOptionsByEducation[demographics.education_level] ?? [];
 
   const submitDemographics = () => {
@@ -166,7 +172,16 @@ export function SurveyApp() {
     setError(null);
     startTransition(async () => {
       try {
-        const participant = await createParticipant(demographics, getDeviceInfo());
+        const participant = await createParticipant(
+          isOtherEducation
+            ? {
+                ...demographics,
+                education_level: `anders / niet meer op school: ${educationOther.trim()}`,
+                class_name: "niet van toepassing",
+              }
+            : demographics,
+          getDeviceInfo(),
+        );
         const nextSession = {
           participantId: participant.id,
           assignedVariant: participant.assigned_variant,
@@ -317,17 +332,27 @@ export function SurveyApp() {
                     label="Niveau"
                     value={demographics.education_level}
                     options={educationOptions}
-                    onChange={(value) =>
+                    onChange={(value) => {
+                      if (value !== "anders / niet meer op school") setEducationOther("");
                       setDemographics({
                         ...demographics,
                         education_level: value,
                         class_name: classOptionsByEducation[value]?.includes(demographics.class_name)
                           ? demographics.class_name
                           : "",
-                      })
-                    }
+                      });
+                    }}
                   />
-                  {demographics.education_level && (
+                  {isOtherEducation && (
+                    <Field label="Wat doe je nu?">
+                      <Input
+                        placeholder="Bijv. mbo, werk, tussenjaar"
+                        value={educationOther}
+                        onChange={(event) => setEducationOther(event.target.value)}
+                      />
+                    </Field>
+                  )}
+                  {demographics.education_level && !isOtherEducation && (
                     <ChoiceField
                       label="Klas"
                       value={demographics.class_name}
@@ -456,13 +481,18 @@ function SliderField({
     <Field label={label}>
       <div className="space-y-4 rounded-md border px-4 py-4">
         <div className="flex items-end justify-between">
-          <span className="text-sm text-muted-foreground">0</span>
+          <span className="text-sm font-medium text-muted-foreground">Bijna nooit</span>
           <span className="rounded-md bg-primary px-4 py-2 text-2xl font-semibold text-primary-foreground">
             {numeric}
           </span>
-          <span className="text-sm text-muted-foreground">10</span>
+          <span className="text-sm font-medium text-muted-foreground">Heel vaak</span>
         </div>
         <Slider min={0} max={10} step={1} value={[numeric]} onValueChange={([next]) => onChange(String(next))} />
+        <div className="grid grid-cols-3 text-xs text-muted-foreground">
+          <span>0</span>
+          <span className="text-center">Soms</span>
+          <span className="text-right">10</span>
+        </div>
       </div>
     </Field>
   );
